@@ -1,0 +1,156 @@
+project:
+  name: estonia-rain-tomorrow-mlops
+  title: Rain Tomorrow Prediction System for Estonia Using MLOps
+  prediction_task: binary_classification
+  target_output:
+    positive_class: "Yes"
+    negative_class: "No"
+
+data:
+  source_name: Open-Meteo Historical Weather API
+  source_url: https://archive-api.open-meteo.com/v1/archive
+  country: Estonia
+  timezone: Europe/Tallinn
+  start_date: "2015-01-01"
+  end_date: "2025-12-31"
+  raw_path: data/raw/estonia_weather.csv
+  processed_path: data/processed/estonia_weather_modeling.csv
+  locations:
+    - city: Tallinn
+      latitude: 59.4370
+      longitude: 24.7536
+    - city: Tartu
+      latitude: 58.3776
+      longitude: 26.7290
+    - city: Narva
+      latitude: 59.3797
+      longitude: 28.1791
+    - city: Parnu
+      latitude: 58.3859
+      longitude: 24.4971
+    - city: Viljandi
+      latitude: 58.3639
+      longitude: 25.5900
+    - city: Rakvere
+      latitude: 59.3464
+      longitude: 26.3558
+    - city: Kuressaare
+      latitude: 58.2524
+      longitude: 22.4853
+    - city: Voru
+      latitude: 57.8424
+      longitude: 27.0190
+    - city: Haapsalu
+      latitude: 58.9431
+      longitude: 23.5414
+    - city: Johvi
+      latitude: 59.3592
+      longitude: 27.4211
+  daily_variables:
+    - temperature_2m_max
+    - temperature_2m_min
+    - temperature_2m_mean
+    - relative_humidity_2m_mean
+    - precipitation_sum
+    - rain_sum
+    - wind_speed_10m_max
+    - wind_gusts_10m_max
+    - pressure_msl_mean
+
+target:
+  name: RainTomorrow
+  rain_today_column: RainToday
+  precipitation_column: precipitation_sum
+  precipitation_threshold_mm: 1.0
+  grouping_column: city
+  date_column: date
+  rule: "RainTomorrow is 1 when the next day's precipitation_sum is greater than or equal to 1.0 mm for the same city."
+
+features:
+  categorical:
+    - city
+  numeric:
+    - latitude
+    - longitude
+    - temperature_2m_max
+    - temperature_2m_min
+    - temperature_2m_mean
+    - relative_humidity_2m_mean
+    - precipitation_sum
+    - rain_sum
+    - wind_speed_10m_max
+    - wind_gusts_10m_max
+    - pressure_msl_mean
+    - RainToday
+    - month
+    - day_of_year
+
+preprocessing:
+  missing_numeric_strategy: median
+  missing_categorical_strategy: most_frequent
+  categorical_encoding: one_hot
+  numeric_scaling: standard_scaler
+  add_calendar_features:
+    - month
+    - day_of_year
+
+model:
+  type: logistic_regression
+  library: scikit-learn
+  split_strategy: chronological
+  test_size: 0.2
+  random_state: 42
+  max_iter: 1000
+  class_weight: balanced
+
+evaluation:
+  metrics:
+    - accuracy
+    - f1_score
+    - precision
+    - recall
+    - roc_auc
+  metrics_path: reports/metrics.json
+
+tracking:
+  tool: MLflow
+  mlflow_tracking_uri: file:./mlruns
+  experiment_name: estonia-rain-tomorrow
+
+artifacts:
+  model_path: models/estonia_rain_model.joblib
+
+monitoring:
+  prediction_log_path: logs/predictions.jsonl
+  log_format: jsonl
+  fields:
+    - timestamp
+    - city
+    - input_features
+    - prediction
+    - rain_probability
+
+api:
+  framework: FastAPI
+  host: 0.0.0.0
+  port: 8000
+  endpoints:
+    health: /health
+    predict: /predict
+    monitoring_recent: /monitoring/recent
+
+dvc:
+  pipeline_file: dvc.yaml
+  stages:
+    - fetch_data
+    - preprocess
+    - train
+    - evaluate
+
+docker:
+  image_name: estonia-rain-api
+  container_port: 8000
+
+ci:
+  provider: GitHub Actions
+  workflow_path: .github/workflows/ci.yml
