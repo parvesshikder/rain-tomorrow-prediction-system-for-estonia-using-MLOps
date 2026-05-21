@@ -1,0 +1,46 @@
+schema: '2.0'
+stages:
+  fetch_data:
+    cmd: python -m src.fetch_data
+    deps:
+    - path: params.yaml
+      hash: md5
+      md5: 45c9b7f9852693144510b02f055b2144
+      size: 3532
+    - path: src/config.py
+      hash: md5
+      md5: e5812165483bc2f2a56b776ea7c1913d
+      size: 299
+    - path: src/fetch_data.py
+      hash: md5
+      md5: c95aea7d901cfcbd90b596a855933aed
+      size: 2968
+    outs:
+    - path: data/raw/estonia_weather.csv
+      hash: md5
+      md5: 3c1694ef9024c7c3caff1faff308a8d7
+      size: 3080966
+  preprocess:
+    cmd: python -m src.preprocess
+    deps:
+    - path: data/raw/estonia_weather.csv
+      hash: md5
+      md5: 3c1694ef9024c7c3caff1faff308a8d7
+      size: 3080966
+    - path: params.yaml
+      hash: md5
+      md5: 45c9b7f9852693144510b02f055b2144
+      size: 3532
+    - path: src/config.py
+      hash: md5
+      md5: e5812165483bc2f2a56b776ea7c1913d
+      size: 299
+    - path: src/preprocess.py
+      hash: md5
+      md5: c7581fc09d8c4affd2443b49d9083a80
+      size: 2176
+    outs:
+    - path: data/processed/estonia_weather_modeling.csv
+      hash: md5
+      md5: d554a5df44789701e2ee0a8359df3cb8
+      size: 3480055

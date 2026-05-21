@@ -1,2 +1,19 @@
-# DVC pipeline stages will be added after data, preprocessing, training, and evaluation scripts are ready.
+stages:
+  fetch_data:
+    cmd: python -m src.fetch_data
+    deps:
+      - src/fetch_data.py
+      - src/config.py
+      - params.yaml
+    outs:
+      - data/raw/estonia_weather.csv
 
+  preprocess:
+    cmd: python -m src.preprocess
+    deps:
+      - src/preprocess.py
+      - src/config.py
+      - data/raw/estonia_weather.csv
+      - params.yaml
+    outs:
+      - data/processed/estonia_weather_modeling.csv

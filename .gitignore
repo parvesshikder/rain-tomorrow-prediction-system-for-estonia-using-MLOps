@@ -1,1 +1,7 @@
 .venv/
+data/raw/estonia_weather.csv
+data/processed/estonia_weather_modeling.csv
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
