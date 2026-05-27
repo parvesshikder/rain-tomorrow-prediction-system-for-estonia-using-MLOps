@@ -1,177 +1,168 @@
-# Weather Prediction System with MLOps Pipeline Flow
+# Rain Tomorrow Prediction System for Estonia Using MLOps
 
-## Project Title
+An end-to-end MLOps project that predicts whether it is likely to rain tomorrow for selected Estonian cities. The project covers data collection, preprocessing, target creation, model training, experiment tracking, evaluation, API deployment, Docker containerization, monitoring, and CI.
 
-Rain Tomorrow Prediction System for Estonia Using MLOps
+Team:
 
-## Project Description
+- Debotush Dam
+- Calvin Saragih
+- Md Parves Shikder
 
-The goal of this project is to build a machine learning application that predicts whether it will rain tomorrow for a selected location in Estonia.
+## Project Overview
 
-```text
-Rain Tomorrow: Yes or No
-```
+The application estimates tomorrow's rain chance for a selected Estonian city. It uses weather features such as temperature, humidity, precipitation, rain amount, wind speed, wind gusts, pressure, location, and calendar fields.
 
-The focus of the project is not only to build a machine learning model, but to create a complete and reproducible MLOps workflow using the tools from the course.
-
-## Project Scope
-
-The system will predict rain tomorrow for selected Estonian locations using historical weather observations. The raw weather data will come from a public weather API, and the machine learning model will be trained as part of this project.
-
-## Problem Statement
-
-The system will predict:
+Target output:
 
 ```text
 RainTomorrow: Yes or No
 ```
 
-Using historical weather data such as:
+This is an MLOps demonstration project. The model gives an estimated rain chance, not a professional weather forecast.
+
+## Key Features
+
+- Estonia-focused weather prediction for multiple cities
+- Open-Meteo historical weather data pipeline
+- Deterministic sample data mode for reliable local and CI runs
+- `RainToday` and `RainTomorrow` target creation during preprocessing
+- Scikit-learn Logistic Regression model
+- MLflow experiment tracking
+- DVC pipeline orchestration
+- FastAPI prediction service with browser frontend
+- Forecast input loader using recent weather plus tomorrow forecast data
+- Prediction logging for monitoring
+- Docker Compose services for pipeline, API, and MLflow
+- GitHub Actions CI workflow
+
+## Tech Stack
+
+| Area | Tool |
+| --- | --- |
+| Language | Python |
+| ML | scikit-learn |
+| Data pipeline | pandas, requests |
+| Experiment tracking | MLflow |
+| Pipeline orchestration | DVC |
+| API | FastAPI, Uvicorn |
+| Containerization | Docker, Docker Compose |
+| Testing | pytest |
+| CI | GitHub Actions |
+
+## Project Structure
 
 ```text
-temperature
-humidity
-wind speed
-pressure
-precipitation
-rain amount
-location
-date-based features
+.
+|-- data/
+|   |-- raw/
+|   `-- processed/
+|-- logs/
+|-- models/
+|-- reports/
+|   |-- final_report.md
+|   `-- metrics.json
+|-- src/
+|   |-- api.py
+|   |-- config.py
+|   |-- evaluate.py
+|   |-- fetch_data.py
+|   |-- monitor.py
+|   |-- preprocess.py
+|   `-- train.py
+|-- tests/
+|-- .github/workflows/ci.yml
+|-- docker-compose.yml
+|-- Dockerfile
+|-- dvc.yaml
+|-- params.yaml
+`-- requirements.txt
 ```
 
-## Dataset Plan
+Generated files such as raw data, processed data, models, MLflow runs, prediction logs, and local presentation outputs are ignored by git.
 
-The project will use public historical weather data for Estonia.
+## Data and Target
 
-Planned data source:
+The project uses daily weather observations for selected Estonian cities. The planned live source is:
 
 ```text
 Open-Meteo Historical Weather API
 ```
 
-Open-Meteo provides public historical weather observations. The `RainTomorrow` target will be created during preprocessing from the next day's precipitation value.
-
-The dataset will include multiple Estonian locations.
-
-## Target Variable
-
-The target column will be created manually:
+The target is created inside the project:
 
 ```text
 RainToday = 1 if today's precipitation_sum >= 1.0 mm
 RainToday = 0 otherwise
 
-RainTomorrow = 1 if tomorrow's precipitation_sum >= 1.0 mm
+RainTomorrow = 1 if the next day's precipitation_sum >= 1.0 mm
 RainTomorrow = 0 otherwise
 ```
 
-This means the API provides raw data only. The target creation, preprocessing, model training, evaluation, and deployment are done in this project.
+Important detail: `RainTomorrow` is shifted within each city group, so one city's last row is not accidentally matched with another city's first row.
 
-## Project Objectives
+## Model
 
-The project objectives are:
+The model is a scikit-learn pipeline:
 
-```text
-1. Machine learning model development
-2. Data versioning
-3. Experiment tracking
-4. MLflow usage
-5. Docker containerization
-6. Continuous Integration
-7. Workflow orchestration
-8. Local deployment
-9. Monitoring
-```
+- numeric imputation with median
+- categorical imputation with most frequent value
+- numeric scaling with `StandardScaler`
+- city encoding with `OneHotEncoder`
+- Logistic Regression classifier
+- chronological train/test split
 
-## Machine Learning Model
+Current sample-data metrics:
 
-Planned model:
+| Metric | Value |
+| --- | ---: |
+| Accuracy | 0.5393 |
+| F1 score | 0.6017 |
+| Precision | 0.7658 |
+| Recall | 0.5393 |
+| ROC-AUC | 0.5755 |
 
-```text
-Logistic Regression
-```
-
-Library:
+These metrics are saved in:
 
 ```text
-Scikit-learn
+reports/metrics.json
 ```
 
-Evaluation metrics:
+## Correct Run Order
+
+Use this order after cloning the project:
+
+1. Run the training pipeline first.
+2. Start the API and MLflow services.
+3. Open the browser UI and make predictions.
+
+The API needs the trained model file from the pipeline:
 
 ```text
-Accuracy
-F1-score
-Precision
-Recall
-ROC-AUC
+models/estonia_rain_model.joblib
 ```
 
-## MLOps Components
+## Run with Docker Compose
 
-The project will include the following MLOps components:
+Clone and enter the project:
 
-| Component | Planned Implementation |
-| --- | --- |
-| Data management and versioning | DVC |
-| Experiment tracking | MLflow |
-| Model artifact storage | MLflow and `models/` folder |
-| Containerization | Docker |
-| Continuous Integration | GitHub Actions |
-| Workflow orchestration | DVC pipeline / Python scripts |
-| Local deployment | FastAPI |
-| Monitoring | Prediction logs |
-
-## System Workflow
-
-The planned system workflow is:
-
-```text
-1. Historical Estonia weather data
-2. DVC data versioning
-3. Data preprocessing
-4. Model training
-5. MLflow experiment tracking
-6. Model evaluation
-7. Docker container
-8. GitHub Actions CI
-9. FastAPI deployment
-10. Monitoring logs
+```bash
+git clone git@github.com:parvesshikder/rain-tomorrow-prediction-system-for-estonia-using-MLOps.git
+cd rain-tomorrow-prediction-system-for-estonia-using-MLOps
 ```
 
-## Technologies Used
-
-| Task | Tool |
-| --- | --- |
-| Programming | Python |
-| ML Library | Scikit-learn |
-| Tracking | MLflow |
-| Versioning | DVC |
-| Containerization | Docker |
-| CI/CD | GitHub Actions |
-| Deployment | FastAPI |
-| Orchestration | DVC pipeline / scripts |
-| Repository | GitHub |
-
-
-
-## Expected Outcome
-
-At the end of the full project:
-
-```text
-1. A working Estonia rain prediction model will be created.
-2. The system will be reproducible and deployable.
-3. The project will simulate a production ML workflow.
-```
-
-## How to Run
-
-Build and run the full pipeline with Docker Compose:
+Build and run the full ML pipeline:
 
 ```bash
 docker compose run --rm --build rain-pipeline
 ```
+
+By default, the pipeline uses deterministic sample data:
+
+```text
+USE_SAMPLE_DATA=1
+```
+
+This is intentional. It makes the project run reliably even if the Open-Meteo historical API is rate-limited.
 
 The pipeline creates:
 
@@ -183,34 +174,80 @@ reports/metrics.json
 mlruns/
 ```
 
-By default, Docker Compose uses deterministic sample data so the project can run even when the Open-Meteo daily API limit is reached. To force live Open-Meteo data:
+Start the API and MLflow:
 
 ```bash
-USE_SAMPLE_DATA=0 FALLBACK_TO_SAMPLE_DATA=0 docker compose run --rm --build rain-pipeline
+docker compose up -d api mlflow
 ```
 
-## FastAPI App
-
-Start the API:
-
-```bash
-docker compose up --build api
-```
-
-Open the browser UI:
+Open the frontend:
 
 ```text
 http://localhost:8000
 ```
 
-API endpoints:
+Open MLflow:
+
+```text
+http://localhost:5001
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+## Run with Live Open-Meteo Data
+
+The default sample mode is recommended for demos and CI. To try live historical data:
+
+```bash
+USE_SAMPLE_DATA=0 docker compose run --rm --build rain-pipeline
+```
+
+If you want the command to fail instead of falling back to sample data when the API is rate-limited:
+
+```bash
+USE_SAMPLE_DATA=0 FALLBACK_TO_SAMPLE_DATA=0 docker compose run --rm --build rain-pipeline
+```
+
+Open-Meteo can return `429 Too Many Requests`. If that happens, wait and try again, or use the default sample data mode.
+
+## Port Conflicts
+
+If port `8000` is already in use, run the API on another host port:
+
+```bash
+API_HOST_PORT=8001 docker compose up -d api
+```
+
+Then open:
+
+```text
+http://localhost:8001
+```
+
+If port `5001` is already in use, run MLflow on another host port:
+
+```bash
+MLFLOW_HOST_PORT=5002 docker compose up -d mlflow
+```
+
+Then open:
+
+```text
+http://localhost:5002
+```
+
+## API Endpoints
 
 | Endpoint | Method | Purpose |
 | --- | --- | --- |
-| `/` | GET | Browser UI for predictions |
+| `/` | GET | Browser frontend |
 | `/health` | GET | Service and model status |
 | `/predict` | POST | Rain-tomorrow prediction |
-| `/weather/forecast-input` | GET | Recent weather plus tomorrow forecast inputs for a city |
+| `/weather/forecast-input` | GET | Recent weather plus tomorrow forecast inputs |
 | `/weather/current` | GET | Backward-compatible alias for forecast inputs |
 | `/monitoring/recent` | GET | Recent prediction logs |
 
@@ -233,33 +270,83 @@ curl -X POST http://localhost:8000/predict \
   }'
 ```
 
-Predictions are logged to:
+Example forecast input request:
+
+```bash
+curl "http://localhost:8000/weather/forecast-input?city=Tallinn"
+```
+
+## Browser Frontend
+
+The frontend is served by FastAPI:
+
+```text
+http://localhost:8000
+```
+
+Workflow:
+
+1. Select a city.
+2. Click `Load Forecast Data`.
+3. Review the weather inputs.
+4. Click `Estimate Rain Chance`.
+5. View the estimated rain probability and prediction sentence.
+
+The frontend uses `/weather/forecast-input`, which requests recent weather and tomorrow forecast data from Open-Meteo. Internet access is required for that button.
+
+## Monitoring
+
+Each prediction is logged to:
 
 ```text
 logs/predictions.jsonl
 ```
 
-## MLflow
-
-Run the MLflow UI:
+View recent prediction logs:
 
 ```bash
-docker compose up -d mlflow
+curl "http://localhost:8000/monitoring/recent?limit=10"
 ```
 
-Open:
+## DVC Pipeline
+
+The DVC workflow is defined in:
 
 ```text
-http://localhost:5001
+dvc.yaml
+```
+
+Stages:
+
+```text
+fetch_data -> preprocess -> train -> evaluate
+```
+
+Run DVC through the Docker image:
+
+```bash
+docker compose run --rm -e USE_SAMPLE_DATA=1 api dvc repro
+```
+
+The simpler project command is usually enough:
+
+```bash
+docker compose run --rm --build rain-pipeline
 ```
 
 ## Testing
 
-Run the pipeline first, then tests:
+Run tests after the pipeline has created the model and metrics:
 
 ```bash
 docker compose run --rm --build rain-pipeline
-docker compose run --rm api python -m pytest
+docker compose run --rm api python -m pytest -q
+```
+
+Expected current result:
+
+```text
+24 passed
 ```
 
 ## CI
@@ -270,4 +357,30 @@ GitHub Actions is configured in:
 .github/workflows/ci.yml
 ```
 
-The CI workflow installs dependencies, runs the pipeline with sample data, runs `pytest`, and validates the Docker build.
+The workflow:
+
+1. Installs dependencies.
+2. Runs the DVC pipeline with sample data.
+3. Runs tests.
+4. Builds the Docker image.
+
+## Notes and Limitations
+
+- The project is complete as an MLOps demonstration.
+- The model's current predictive accuracy is modest.
+- The frontend wording uses estimated rain chance because this is not a professional meteorological forecast.
+- The default sample data mode is used to make local runs and CI stable.
+- Live API data can be rate-limited by Open-Meteo.
+
+## Final Deliverables
+
+- Reproducible ML pipeline
+- Processed Estonia weather dataset
+- Trained rain prediction model
+- MLflow experiment logs
+- DVC pipeline
+- FastAPI prediction API and browser UI
+- Prediction monitoring logs
+- Docker Compose deployment
+- GitHub Actions CI
+- Final metrics report
