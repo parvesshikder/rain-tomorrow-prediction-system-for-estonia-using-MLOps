@@ -17,3 +17,23 @@ stages:
       - params.yaml
     outs:
       - data/processed/estonia_weather_modeling.csv
+
+  train:
+    cmd: python -m src.train
+    deps:
+      - src/train.py
+      - data/processed/estonia_weather_modeling.csv
+      - params.yaml
+    outs:
+      - models/estonia_rain_model.joblib
+
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+      - src/evaluate.py
+      - data/processed/estonia_weather_modeling.csv
+      - models/estonia_rain_model.joblib
+      - params.yaml
+    metrics:
+      - reports/metrics.json:
+          cache: false

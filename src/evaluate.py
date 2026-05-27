@@ -9,7 +9,8 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
-    classification_report
+    classification_report,
+    confusion_matrix,
 )
 
 # Load params
@@ -66,7 +67,8 @@ metrics = {
     "f1_score":  round(f1, 4),
     "precision": round(precision, 4),
     "recall":    round(recall, 4),
-    "roc_auc":   round(roc_auc, 4)
+    "roc_auc":   round(roc_auc, 4),
+    "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
 }
 
 with open(metrics_path, "w") as f:

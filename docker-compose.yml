@@ -1,0 +1,61 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: estonia-rain-mlops:latest
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app"
+      GIT_PYTHON_REFRESH: "quiet"
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+
+  rain-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: estonia-rain-mlops:latest
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app"
+      USE_SAMPLE_DATA: "${USE_SAMPLE_DATA:-1}"
+      FALLBACK_TO_SAMPLE_DATA: "${FALLBACK_TO_SAMPLE_DATA:-1}"
+      FETCH_MAX_ATTEMPTS: "${FETCH_MAX_ATTEMPTS:-2}"
+      FETCH_RATE_LIMIT_BACKOFF_SECONDS: "${FETCH_RATE_LIMIT_BACKOFF_SECONDS:-5}"
+      FETCH_ERROR_BACKOFF_SECONDS: "${FETCH_ERROR_BACKOFF_SECONDS:-3}"
+      FETCH_SLEEP_BETWEEN_LOCATIONS_SECONDS: "${FETCH_SLEEP_BETWEEN_LOCATIONS_SECONDS:-1}"
+      SAMPLE_START_DATE: "${SAMPLE_START_DATE:-2015-01-01}"
+      SAMPLE_END_DATE: "${SAMPLE_END_DATE:-2025-12-31}"
+    volumes:
+      - .:/app
+    command: >
+      sh -c "python -m src.fetch_data &&
+             python -m src.preprocess &&
+             python -m src.train &&
+             python -m src.evaluate"
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: estonia-rain-mlops:latest
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "/app"
+      GIT_PYTHON_REFRESH: "quiet"
+    ports:
+      - "${MLFLOW_HOST_PORT:-5001}:5000"
+    volumes:
+      - .:/app
+    command: >
+      mlflow ui
+      --backend-store-uri file:./mlruns
+      --host 0.0.0.0
+      --port 5000

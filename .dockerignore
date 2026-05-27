@@ -1,0 +1,12 @@
+.git
+.dvc/cache
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+mlruns
+reports
+logs
+data/raw
+data/processed
+Project Proposal.pdf

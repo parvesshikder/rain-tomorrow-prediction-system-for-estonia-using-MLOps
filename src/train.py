@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 
 # Load params
 with open("params.yaml", "r") as f:
@@ -71,6 +72,17 @@ with mlflow.start_run():
     mlflow.log_param("class_weight", params["model"]["class_weight"])
 
     model_pipeline.fit(X_train, y_train)
+
+    y_pred = model_pipeline.predict(X_test)
+    y_prob = model_pipeline.predict_proba(X_test)[:, 1]
+    metrics = {
+        "accuracy": accuracy_score(y_test, y_pred),
+        "f1_score": f1_score(y_test, y_pred, average="weighted"),
+        "precision": precision_score(y_test, y_pred, average="weighted"),
+        "recall": recall_score(y_test, y_pred, average="weighted"),
+        "roc_auc": roc_auc_score(y_test, y_prob),
+    }
+    mlflow.log_metrics(metrics)
 
     model_path = params["artifacts"]["model_path"]
     os.makedirs(os.path.dirname(model_path), exist_ok=True)

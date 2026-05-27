@@ -1,7 +1,48 @@
-.venv/
-data/raw/estonia_weather.csv
-data/processed/estonia_weather_modeling.csv
+# Python caches
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments and local secrets
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Generated data and model artifacts
+data/raw/estonia_weather.csv
+data/processed/estonia_weather_modeling.csv
+models/
+
+# Reports: keep final report and DVC metrics, ignore other report artifacts
+reports/*
+!reports/
+!reports/final_report.md
+!reports/metrics.json
+
+# Runtime logs and experiment tracking
+logs/
+mlruns/
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# Generated presentation/build workspace
+outputs/
+
+# Node/package scratch from generated tools
+node_modules/

@@ -164,3 +164,110 @@ At the end of the full project:
 2. The system will be reproducible and deployable.
 3. The project will simulate a production ML workflow.
 ```
+
+## How to Run
+
+Build and run the full pipeline with Docker Compose:
+
+```bash
+docker compose run --rm --build rain-pipeline
+```
+
+The pipeline creates:
+
+```text
+data/raw/estonia_weather.csv
+data/processed/estonia_weather_modeling.csv
+models/estonia_rain_model.joblib
+reports/metrics.json
+mlruns/
+```
+
+By default, Docker Compose uses deterministic sample data so the project can run even when the Open-Meteo daily API limit is reached. To force live Open-Meteo data:
+
+```bash
+USE_SAMPLE_DATA=0 FALLBACK_TO_SAMPLE_DATA=0 docker compose run --rm --build rain-pipeline
+```
+
+## FastAPI App
+
+Start the API:
+
+```bash
+docker compose up --build api
+```
+
+Open the browser UI:
+
+```text
+http://localhost:8000
+```
+
+API endpoints:
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/` | GET | Browser UI for predictions |
+| `/health` | GET | Service and model status |
+| `/predict` | POST | Rain-tomorrow prediction |
+| `/weather/forecast-input` | GET | Recent weather plus tomorrow forecast inputs for a city |
+| `/weather/current` | GET | Backward-compatible alias for forecast inputs |
+| `/monitoring/recent` | GET | Recent prediction logs |
+
+Example prediction request:
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "city": "Tallinn",
+    "temperature_2m_max": 12,
+    "temperature_2m_min": 4,
+    "temperature_2m_mean": 8,
+    "relative_humidity_2m_mean": 82,
+    "precipitation_sum": 1.4,
+    "rain_sum": 1.2,
+    "wind_speed_10m_max": 18,
+    "wind_gusts_10m_max": 28,
+    "pressure_msl_mean": 1009
+  }'
+```
+
+Predictions are logged to:
+
+```text
+logs/predictions.jsonl
+```
+
+## MLflow
+
+Run the MLflow UI:
+
+```bash
+docker compose up -d mlflow
+```
+
+Open:
+
+```text
+http://localhost:5001
+```
+
+## Testing
+
+Run the pipeline first, then tests:
+
+```bash
+docker compose run --rm --build rain-pipeline
+docker compose run --rm api python -m pytest
+```
+
+## CI
+
+GitHub Actions is configured in:
+
+```text
+.github/workflows/ci.yml
+```
+
+The CI workflow installs dependencies, runs the pipeline with sample data, runs `pytest`, and validates the Docker build.

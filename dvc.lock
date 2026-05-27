@@ -5,32 +5,32 @@ stages:
     deps:
     - path: params.yaml
       hash: md5
-      md5: 45c9b7f9852693144510b02f055b2144
-      size: 3532
+      md5: b1d6b5e45c75bfbeaba165c770e4fbee
+      size: 3376
     - path: src/config.py
       hash: md5
       md5: e5812165483bc2f2a56b776ea7c1913d
       size: 299
     - path: src/fetch_data.py
       hash: md5
-      md5: c95aea7d901cfcbd90b596a855933aed
-      size: 2968
+      md5: cc7dda22b86a3023420df8f97d1b165a
+      size: 6718
     outs:
     - path: data/raw/estonia_weather.csv
       hash: md5
-      md5: 3c1694ef9024c7c3caff1faff308a8d7
-      size: 3080966
+      md5: 41f1470a79cdd67c294f99887728262d
+      size: 3412416
   preprocess:
     cmd: python -m src.preprocess
     deps:
     - path: data/raw/estonia_weather.csv
       hash: md5
-      md5: 3c1694ef9024c7c3caff1faff308a8d7
-      size: 3080966
+      md5: 41f1470a79cdd67c294f99887728262d
+      size: 3412416
     - path: params.yaml
       hash: md5
-      md5: 45c9b7f9852693144510b02f055b2144
-      size: 3532
+      md5: b1d6b5e45c75bfbeaba165c770e4fbee
+      size: 3376
     - path: src/config.py
       hash: md5
       md5: e5812165483bc2f2a56b776ea7c1913d
@@ -42,5 +42,49 @@ stages:
     outs:
     - path: data/processed/estonia_weather_modeling.csv
       hash: md5
-      md5: d554a5df44789701e2ee0a8359df3cb8
-      size: 3480055
+      md5: 7b241bbb042fb1ac1b74bbcc7b828a04
+      size: 3811517
+  train:
+    cmd: python -m src.train
+    deps:
+    - path: data/processed/estonia_weather_modeling.csv
+      hash: md5
+      md5: 7b241bbb042fb1ac1b74bbcc7b828a04
+      size: 3811517
+    - path: params.yaml
+      hash: md5
+      md5: b1d6b5e45c75bfbeaba165c770e4fbee
+      size: 3376
+    - path: src/train.py
+      hash: md5
+      md5: aac8afc9964af8a82c3f4e6382eb7b98
+      size: 3108
+    outs:
+    - path: models/estonia_rain_model.joblib
+      hash: md5
+      md5: f2ad3a041b42adaa3cc5479f1d809230
+      size: 5322
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+    - path: data/processed/estonia_weather_modeling.csv
+      hash: md5
+      md5: 7b241bbb042fb1ac1b74bbcc7b828a04
+      size: 3811517
+    - path: models/estonia_rain_model.joblib
+      hash: md5
+      md5: f2ad3a041b42adaa3cc5479f1d809230
+      size: 5322
+    - path: params.yaml
+      hash: md5
+      md5: b1d6b5e45c75bfbeaba165c770e4fbee
+      size: 3376
+    - path: src/evaluate.py
+      hash: md5
+      md5: bd722a6ca102c442070ff6b1af4313aa
+      size: 2049
+    outs:
+    - path: reports/metrics.json
+      hash: md5
+      md5: 289b14eec40bf3ed0d3da1c5f87d714e
+      size: 262

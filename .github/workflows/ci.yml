@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate DVC pipeline with sample data
+        env:
+          USE_SAMPLE_DATA: "1"
+          SAMPLE_START_DATE: "2015-01-01"
+          SAMPLE_END_DATE: "2025-12-31"
+          GIT_PYTHON_REFRESH: "quiet"
+        run: dvc repro
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Validate Docker build
+        run: docker build -t estonia-rain-mlops:test .
