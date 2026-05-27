@@ -1,5 +1,3 @@
-# src/train.py
-
 import pandas as pd
 import mlflow
 import mlflow.sklearn
@@ -11,31 +9,30 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
-from sklearn.model_selection import train_test_split
 
 # Load params
 with open("params.yaml", "r") as f:
     params = yaml.safe_load(f)
 
 # Load processed data
-df = pd.read_csv("data/processed/processed.csv")
+df = pd.read_csv(params["data"]["processed_path"])
 
 # Features and target
-X = df.drop(columns=["RainTomorrow"])
-y = df["RainTomorrow"]
+target = params["target"]["name"]
+categorical_cols = params["features"]["categorical"]
+numerical_cols = params["features"]["numeric"]
 
-# Identify column types
-categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
-numerical_cols = X.select_dtypes(include=["number"]).columns.tolist()
+X = df[categorical_cols + numerical_cols]
+y = df[target]
 
 # Preprocessing
 numerical_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="mean")),
+    ("imputer", SimpleImputer(strategy=params["preprocessing"]["missing_numeric_strategy"])),
     ("scaler", StandardScaler())
 ])
 
 categorical_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("imputer", SimpleImputer(strategy=params["preprocessing"]["missing_categorical_strategy"])),
     ("encoder", OneHotEncoder(handle_unknown="ignore"))
 ])
 
@@ -48,36 +45,36 @@ preprocessor = ColumnTransformer(transformers=[
 model_pipeline = Pipeline(steps=[
     ("preprocessor", preprocessor),
     ("classifier", LogisticRegression(
-        max_iter=params["train"]["max_iter"],
-        C=params["train"]["C"],
-        random_state=params["train"]["random_state"]
+        max_iter=params["model"]["max_iter"],
+        C=1.0,
+        random_state=params["model"]["random_state"],
+        class_weight=params["model"]["class_weight"]
     ))
 ])
 
-# Train/test split
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    test_size=params["train"]["test_size"],
-    random_state=params["train"]["random_state"]
-)
+# Chronological train/test split
+test_size = params["model"]["test_size"]
+split_index = int(len(df) * (1 - test_size))
+X_train = X.iloc[:split_index]
+X_test = X.iloc[split_index:]
+y_train = y.iloc[:split_index]
+y_test = y.iloc[split_index:]
 
 # MLflow tracking
-mlflow.set_experiment("rain-prediction")
+mlflow.set_tracking_uri(params["tracking"]["mlflow_tracking_uri"])
+mlflow.set_experiment(params["tracking"]["experiment_name"])
 
 with mlflow.start_run():
-    # Log params
-    mlflow.log_param("max_iter", params["train"]["max_iter"])
-    mlflow.log_param("C", params["train"]["C"])
-    mlflow.log_param("test_size", params["train"]["test_size"])
+    mlflow.log_param("max_iter", params["model"]["max_iter"])
+    mlflow.log_param("test_size", params["model"]["test_size"])
+    mlflow.log_param("random_state", params["model"]["random_state"])
+    mlflow.log_param("class_weight", params["model"]["class_weight"])
 
-    # Train
     model_pipeline.fit(X_train, y_train)
 
-    # Save model
-    os.makedirs("models", exist_ok=True)
-    joblib.dump(model_pipeline, "models/model.pkl")
+    model_path = params["artifacts"]["model_path"]
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    joblib.dump(model_pipeline, model_path)
 
-    # Log model to MLflow
     mlflow.sklearn.log_model(model_pipeline, "model")
-
-    print("Model trained and saved to models/model.pkl")
+    print(f"Model trained and saved to {model_path}")
