@@ -248,6 +248,79 @@ Then open:
 http://localhost:5002
 ```
 
+## Minikube (Simple Local Run)
+
+This section deploys the FastAPI service to a local Minikube cluster without Kubeflow Pipelines.
+
+Prereqs (Windows):
+
+```powershell
+winget install -e --id Kubernetes.kubectl
+winget install -e --id Kubernetes.minikube
+```
+
+Start Minikube:
+
+```powershell
+minikube start --driver=docker --cpus=4 --memory=4096
+```
+
+If Minikube complains about changing CPU or memory on an existing profile, delete and recreate it:
+
+```powershell
+minikube delete
+minikube start --driver=docker --cpus=4 --memory=4096
+```
+
+Run the training pipeline first so the model file exists locally:
+
+```powershell
+docker compose run --rm --build rain-pipeline
+```
+
+Build the Docker image into the Minikube registry so the cluster can pull it without a remote registry:
+
+```powershell
+minikube image build -t estonia-rain-mlops:latest .
+```
+
+Deploy the API:
+
+```powershell
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/api-deployment.yaml
+kubectl apply -f k8s/api-service.yaml
+```
+
+Or run the automated script:
+
+```powershell
+./scripts/minikube_run.ps1
+```
+
+Open the API from your local machine:
+
+```powershell
+minikube service -n rain-mlops rain-api --url
+```
+
+Quick test:
+
+```powershell
+$Url = minikube service -n rain-mlops rain-api --url
+curl $Url/health
+```
+
+If the service URL fails with "no running pod", check the pod logs and restart the deployment after rebuilding the image:
+
+```powershell
+kubectl get pods -n rain-mlops
+kubectl logs -n rain-mlops -l app=rain-api --tail=200
+kubectl rollout restart deployment/rain-api -n rain-mlops
+```
+
+Note: the API container needs the trained model file at `models/estonia_rain_model.joblib`. Build the image after running the training pipeline so the model is included in the image layer.
+
 ## API Endpoints
 
 | Endpoint | Method | Purpose |

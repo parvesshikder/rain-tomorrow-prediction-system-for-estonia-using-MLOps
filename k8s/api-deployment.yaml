@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rain-api
+  namespace: rain-mlops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rain-api
+  template:
+    metadata:
+      labels:
+        app: rain-api
+    spec:
+      containers:
+        - name: api
+          image: estonia-rain-mlops:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PYTHONPATH
+              value: "/app"
+            - name: GIT_PYTHON_REFRESH
+              value: "quiet"
+          command: ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
