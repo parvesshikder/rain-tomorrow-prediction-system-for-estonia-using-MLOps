@@ -9,6 +9,7 @@ services:
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: "/app"
       GIT_PYTHON_REFRESH: "quiet"
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
     ports:
       - "${API_HOST_PORT:-8000}:8000"
     volumes:

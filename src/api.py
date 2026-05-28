@@ -3,6 +3,9 @@ from datetime import timedelta
 from functools import lru_cache
 from typing import Any
 
+import os
+import mlflow
+import mlflow.sklearn
 import joblib
 import pandas as pd
 import requests
@@ -92,14 +95,22 @@ def _prepared_features(payload: PredictionRequest) -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def load_model():
-    model_path = PARAMS["artifacts"]["model_path"]
+    model_name = "EstoniaRainModel"
+    model_uri = f"models:/{model_name}/Production"
     try:
-        return joblib.load(model_path)
-    except FileNotFoundError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Model not found at {model_path}. Run the training pipeline first.",
-        ) from exc
+        tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", PARAMS["tracking"]["mlflow_tracking_uri"])
+        mlflow.set_tracking_uri(tracking_uri)
+        return mlflow.sklearn.load_model(model_uri)
+    except Exception as exc:
+        model_path = PARAMS["artifacts"]["model_path"]
+        print(f"Warning: Failed to load from MLflow Registry ({exc}). Falling back to local {model_path}")
+        try:
+            return joblib.load(model_path)
+        except FileNotFoundError as fallback_exc:
+            raise HTTPException(
+                status_code=503,
+                detail="Model not found in Registry or locally. Run the training pipeline first.",
+            ) from fallback_exc
 
 
 def _predict_from_features(features: dict[str, Any]) -> tuple[int, float]:
