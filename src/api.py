@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, Field, field_validator
 
 from src.config import PARAMS
@@ -19,6 +20,8 @@ app = FastAPI(
     description="FastAPI deployment for Estonia rain-tomorrow prediction.",
     version="1.0.0",
 )
+
+Instrumentator().instrument(app).expose(app)
 
 
 class PredictionRequest(BaseModel):
