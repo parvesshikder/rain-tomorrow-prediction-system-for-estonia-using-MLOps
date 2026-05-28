@@ -88,5 +88,34 @@ with mlflow.start_run():
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     joblib.dump(model_pipeline, model_path)
 
-    mlflow.sklearn.log_model(model_pipeline, "model")
+    mlflow.sklearn.log_model(model_pipeline, "model", registered_model_name="EstoniaRainModel")
     print(f"Model trained and saved to {model_path}")
+
+    # Automated Model Promotion
+    client = mlflow.tracking.MlflowClient()
+    latest_versions = client.get_latest_versions("EstoniaRainModel", stages=["None"])
+    if latest_versions:
+        latest_version = latest_versions[0].version
+        prod_versions = client.get_latest_versions("EstoniaRainModel", stages=["Production"])
+        
+        current_accuracy = metrics["accuracy"]
+        
+        if not prod_versions:
+            client.transition_model_version_stage(
+                name="EstoniaRainModel", version=latest_version, stage="Production"
+            )
+            print("First model registered and promoted to Production.")
+        else:
+            prod_run = client.get_run(prod_versions[0].run_id)
+            prod_accuracy = prod_run.data.metrics.get("accuracy", 0.0)
+            
+            if current_accuracy > prod_accuracy:
+                client.transition_model_version_stage(
+                    name="EstoniaRainModel", version=latest_version, stage="Production"
+                )
+                print(f"Model Promoted! New Accuracy ({current_accuracy:.4f}) > Old ({prod_accuracy:.4f})")
+            else:
+                client.transition_model_version_stage(
+                    name="EstoniaRainModel", version=latest_version, stage="Archived"
+                )
+                print(f"Model Rejected. New Accuracy ({current_accuracy:.4f}) <= Old ({prod_accuracy:.4f})")

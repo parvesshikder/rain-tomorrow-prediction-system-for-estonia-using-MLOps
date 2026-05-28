@@ -27,12 +27,13 @@ This is an MLOps demonstration project. The model gives an estimated rain chance
 - Deterministic sample data mode for reliable local and CI runs
 - `RainToday` and `RainTomorrow` target creation during preprocessing
 - Scikit-learn Logistic Regression model
-- MLflow experiment tracking
+- MLflow experiment tracking and Automated Model Registry promotion
 - DVC pipeline orchestration
 - FastAPI prediction service with browser frontend
 - Forecast input loader using recent weather plus tomorrow forecast data
 - Prediction logging for monitoring
-- Docker Compose services for pipeline, API, and MLflow
+- Live API monitoring with Prometheus and Grafana
+- Docker Compose services for pipeline, API, MLflow, Prometheus, and Grafana
 - GitHub Actions CI workflow
 
 ## Tech Stack
@@ -46,6 +47,7 @@ This is an MLOps demonstration project. The model gives an estimated rain chance
 | Pipeline orchestration | DVC |
 | API | FastAPI, Uvicorn |
 | Containerization | Docker, Docker Compose |
+| Monitoring | Prometheus, Grafana |
 | Testing | pytest |
 | CI | GitHub Actions |
 
@@ -174,10 +176,10 @@ reports/metrics.json
 mlruns/
 ```
 
-Start the API and MLflow:
+Start the API, MLflow, Prometheus, and Grafana:
 
 ```bash
-docker compose up -d api mlflow
+docker compose up -d
 ```
 
 Open the frontend:
@@ -186,10 +188,16 @@ Open the frontend:
 http://localhost:8000
 ```
 
-Open MLflow:
+Open MLflow (Experiment Tracking & Model Registry):
 
 ```text
 http://localhost:5001
+```
+
+Open Grafana (API Monitoring):
+
+```text
+http://localhost:3001
 ```
 
 Stop services:
@@ -377,10 +385,10 @@ The workflow:
 - Reproducible ML pipeline
 - Processed Estonia weather dataset
 - Trained rain prediction model
-- MLflow experiment logs
+- MLflow experiment logs and Model Registry
 - DVC pipeline
 - FastAPI prediction API and browser UI
-- Prediction monitoring logs
+- Prometheus & Grafana Monitoring Dashboards
 - Docker Compose deployment
 - GitHub Actions CI
 - Final metrics report
